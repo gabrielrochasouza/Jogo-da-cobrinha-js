@@ -1,25 +1,47 @@
-import { createTable,ctx,canvas,body,span } from "./areaJogo.js";
+import { createTable,ctx,canvas,body,span,maxScore,maxScoreSpan } from "./areaJogo.js";
 
 createTable()
 let quantidadeQuadrados
 let tamanhoQuadrados=15
 let gameStarted=false
 let score=0
+let interval
+const arrScore=[]
 
 let keyDownPressed=false
 
-if(window.innerWidth<=360){
-    quantidadeQuadrados=20
+function verificarQuantidadeDeQuadrados(){
+    if(window.innerWidth<=360){
+        quantidadeQuadrados=20
+        interval=120
+    }
+    if(window.innerWidth>360 && window.innerWidth<600){
+        quantidadeQuadrados=23
+        interval=80
+    }
+    if(window.innerWidth>=600){
+        quantidadeQuadrados=30
+        interval=60
+    }
 }
-if(window.innerWidth>360 && window.innerWidth<600){
-    quantidadeQuadrados=23
+verificarQuantidadeDeQuadrados()
+window.onresize=function(){
+    body.innerHTML=''
+
+    createTable()
+    verificarQuantidadeDeQuadrados()
+    canvas.width=tamanhoQuadrados*quantidadeQuadrados
+    canvas.height=tamanhoQuadrados*quantidadeQuadrados
+    pintarTabuleiro()
+    macaX=Math.floor(Math.random()*quantidadeQuadrados  )
+    macaY=Math.floor(Math.random()*quantidadeQuadrados  )
+    maçaUpdate(macaX,macaY)
+    pintarCobra(cabecaX,cabecaY)
 }
-if(window.innerWidth>=600){
-    quantidadeQuadrados=30
-}
+
 //maça
-let macaX=Math.floor(Math.random()*20  )
-let macaY=Math.floor(Math.random()*20  )
+let macaX=Math.floor(Math.random()*quantidadeQuadrados  )
+let macaY=Math.floor(Math.random()*quantidadeQuadrados  )
 
 //cabeça da cobra 
 let cabecaX=10
@@ -38,7 +60,7 @@ canvas.height=tamanhoQuadrados*quantidadeQuadrados
 
 function pintarTabuleiro(){
     //pinta todo o tabuleiro de preto
-    ctx.fillStyle='rgb(0,0,0)'
+    ctx.fillStyle='black'
     ctx.fillRect(0,0,
         tamanhoQuadrados*quantidadeQuadrados,
         tamanhoQuadrados*quantidadeQuadrados)
@@ -75,12 +97,12 @@ function iniciarGame(){
     const loopGame= setInterval( ()=>{
         game()
  
-        if(checarDerrota(trilha) ){
-            
+        if(checarDerrota(trilha) || (velX==0 && velY==0 ) ){
+            console.log('limpou o intervalo')
             clearInterval(loopGame)
         }
         
-    } , 105);
+    } , interval);
 }
     
 
@@ -119,55 +141,121 @@ function game(){
 }
 
 body.addEventListener('keydown',(evt)=>{
-  
-        
    
     if(gameStarted==false){
         iniciarGame()
     }
     gameStarted=true
     if(evt.key=='ArrowRight' && velX!=-velocidade){
-        
         velX=velocidade
         velY=0
-
     }
     if(evt.key=='ArrowLeft' && velX!=velocidade){
-       
         velX=-velocidade
         velY=0
-        
     }
     if(evt.key=='ArrowUp' && velY!=velocidade){
-        
         velY=-velocidade
         velX=0
-  
     }
-    if(evt.key=='ArrowDown'&& velY!=-velocidade){
-        
+    if(evt.key=='ArrowDown'&& velY!=-velocidade){   
         velY=velocidade
         velX=0
-        
-    }
-
-  
+    }  
 })
+//swipe detection
+let firstTouchX
+let lastTouchX
+let firstTouchY
+let lastTouchY
 
+document.addEventListener('touchstart',(e)=>{
+    firstTouchX=e.touches[0].clientX
+    firstTouchY=e.touches[0].clientY
+
+})
+document.addEventListener('touchmove',(e)=>{
+    lastTouchX=(e.touches[0].clientX)
+    lastTouchY=(e.touches[0].clientY)
+})
+document.addEventListener('touchend',(e)=>{
+    let diffX=lastTouchX - firstTouchX
+    let diffY=lastTouchY - firstTouchY
+
+    if(gameStarted==false){
+        iniciarGame()
+    }
+    gameStarted=true
+
+    if( diffX>=0 && diffY>=0 ){
+
+        if(diffX>diffY && velX!=-velocidade){
+            console.log('direita')
+            velX=velocidade
+            velY=0
+            
+        }else if(velY!=-velocidade){
+            console.log('baixo')
+            velY=velocidade
+            velX=0
+        }
+    }else if( diffX>0 && diffY<0 ){
+        if(diffX>Math.abs(diffY)  && velX!=-velocidade ){
+            console.log('direita')
+            velX=velocidade
+            velY=0   
+        }else if(velY!=velocidade){
+            console.log('cima')
+            velY=-velocidade
+            velX=0
+        }
+    }else if( diffX<0 && diffY<0 ){
+        if(Math.abs(diffX)>Math.abs(diffY) && velX!=velocidade ){
+            console.log('esquerda')
+            velX=-velocidade
+            velY=0   
+        }else if(velY!=velocidade){
+            console.log('cima')
+            velY=-velocidade
+            velX=0
+        }
+    }else if( diffX<0 && diffY>0 ){
+        if(Math.abs(diffX)>diffY  && velX!=velocidade){
+            console.log('esquerda')
+            velX=-velocidade
+            velY=0   
+        }else if(velY!=-velocidade){
+            console.log('baixo')
+            velY=velocidade
+            velX=0   
+        }   
+    }
+})
+//swipe detection end
+//--------------------------------------
 
 function verificarMaca(cabecaEmX,cabecaEmY,macaEmX,macaEmY){
+    
     if(cabecaEmX==macaEmX && cabecaEmY==macaEmY){
-        macaX=Math.floor( Math.random()*20 )
-        macaY=Math.floor( Math.random()*20 )
-        while(trilha.some(elem=> elem.x==macaX && elem.y==macaY) ){
-            macaX=Math.floor( Math.random()*20 )
-            macaY=Math.floor( Math.random()*20 )
+        let newPosMacaX=Math.floor( Math.random()*quantidadeQuadrados )
+        let newPosMacaY=Math.floor( Math.random()*quantidadeQuadrados )
+        while(trilha.some(elem=>elem.x==newPosMacaX && elem.y==newPosMacaY) ){
+            newPosMacaX=Math.floor( Math.random()*quantidadeQuadrados )
+            newPosMacaY=Math.floor( Math.random()*quantidadeQuadrados )
         }
+        macaX=newPosMacaX
+        macaY=newPosMacaY
         score+=100
         span.innerText=score
         cauda++
         maçaUpdate(macaX,macaY)
 
+        if(trilha.some(elem=> elem.x==macaX && elem.y==macaY  )  ){
+            console.log('**********erro*****************')
+            console.log(trilha)
+            console.log('maçaX: '+macaX)
+            console.log('maçaY: '+macaY)
+        }
     }
 
 }
@@ -192,7 +280,12 @@ function checarDerrota(arr){
             velX=0
             velY=0
             cauda=3
+
+            arrScore.push(score)
+            maxScoreSpan.innerText=arrScore.reduce( (elem1,elem2)=> elem1>elem2 ? elem1 : elem2 )
+
             score=0
+
             trilha=[]
             span.innerText=score
             gameStarted=false
