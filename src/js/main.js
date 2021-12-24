@@ -26,17 +26,18 @@ function verificarQuantidadeDeQuadrados(){
 }
 verificarQuantidadeDeQuadrados()
 window.onresize=function(){
-    body.innerHTML=''
-
-    createTable()
-    verificarQuantidadeDeQuadrados()
-    canvas.width=tamanhoQuadrados*quantidadeQuadrados
-    canvas.height=tamanhoQuadrados*quantidadeQuadrados
-    pintarTabuleiro()
-    macaX=Math.floor(Math.random()*quantidadeQuadrados  )
-    macaY=Math.floor(Math.random()*quantidadeQuadrados  )
-    maçaUpdate(macaX,macaY)
-    pintarCobra(cabecaX,cabecaY)
+    if(window.innerWidth>370){
+        body.innerHTML=''
+        createTable()
+        verificarQuantidadeDeQuadrados()
+        canvas.width=tamanhoQuadrados*quantidadeQuadrados
+        canvas.height=tamanhoQuadrados*quantidadeQuadrados
+        pintarTabuleiro()
+        macaX=Math.floor(Math.random()*quantidadeQuadrados  )
+        macaY=Math.floor(Math.random()*quantidadeQuadrados  )
+        maçaUpdate(macaX,macaY)
+        pintarCobra(cabecaX,cabecaY)
+    }
 }
 
 //maça
